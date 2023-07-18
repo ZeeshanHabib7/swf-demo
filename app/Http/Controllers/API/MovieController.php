@@ -84,7 +84,17 @@ class MovieController extends BaseController
             // Delete the movie from the database
             $movie = Movie::findOrFail($id);
             $movie->delete();
-            return $this->successResponse($movie, 'Movies deleted successfully.');
+
+            // Delete the movie from the cache if it exists
+            if (Cache::has('movies')) {
+                $movies = Cache::get('movies');
+                $movies = collect($movies)->reject(function ($item) use ($id) {
+                    return $item['id'] == $id;
+                });
+                Cache::put('movies', $movies, now()->addMinutes(2));
+            }
+
+            return $this->successResponse($movie, 'Movie deleted successfully.');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
@@ -94,7 +104,6 @@ class MovieController extends BaseController
     {
         $client = new Client();
         $response = $client->request('GET', 'https://swapi.dev/api/films');
-
         if ($response->getStatusCode() === 200) {
             $data = json_decode($response->getBody()->getContents());
 

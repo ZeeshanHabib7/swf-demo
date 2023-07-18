@@ -50,7 +50,7 @@ class AuthController extends BaseController
 
             return $this->successResponse($success, 'User login successfully.');
         } else {
-            return $this->errorResponse('Unauthorised', 401);
+            return $this->errorResponse('Invalid credentials. Please try again.', 401);
         }
     }
 
