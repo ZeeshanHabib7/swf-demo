@@ -14,19 +14,6 @@ class MovieTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Create a user and authenticate
-        $user = User::factory()->create();
-        $token = $user->createToken('swf')->plainTextToken;
-        Auth::login($user);
-        $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
-            'Accept' => 'application/json',
-        ]);
-    }
 
     /**
      * Test fetching movies without search term.
