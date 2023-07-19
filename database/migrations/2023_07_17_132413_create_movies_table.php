@@ -16,11 +16,11 @@ return new class extends Migration
         Schema::create('movies', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->integer('episode_id');
-            $table->date('release_date');
-            $table->string('director');
-            $table->string('producer');
-            $table->text('opening_crawl');
+            $table->integer('episode_id')->nullable();
+            $table->date('release_date')->nullable();
+            $table->string('director')->nullable();
+            $table->string('producer')->nullable();
+            $table->text('opening_crawl')->nullable();
             $table->timestamps();
         });
     }

@@ -104,8 +104,15 @@ class MovieController extends BaseController
     {
         $client = new Client();
         $response = $client->request('GET', 'https://swapi.dev/api/films');
-        if ($response->getStatusCode() === 200) {
+        $response2 = $client->request('GET', 'https://api.themoviedb.org/3/trending/movie/day', [
+        'headers' => [
+            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiOWRmOTNlY2E4ZWViOWVhNGM5NzMxZTQxOTIxYTgzNCIsInN1YiI6IjY0Yjc4YTNkMTA5Y2QwMDBhZTkyYjg3NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.5RhDiLt7yrEzNN2eNdBxLF06s-rLppojytFgHdwH1Qk',
+            'accept' => 'application/json',
+        ],
+        ]);
+        if ($response->getStatusCode() === 200 && $response2->getStatusCode() === 200) {
             $data = json_decode($response->getBody()->getContents());
+            $data2 = json_decode($response2->getBody()->getContents());
 
             // Process and format the relevant movie information
             $movies = collect($data->results)->map(function ($movie) {
@@ -119,15 +126,37 @@ class MovieController extends BaseController
                 ];
             });
 
+            $movies2 = collect($data2->results)->map(function ($movie) {
+                return [
+                    'title' => $movie->title,
+                    'poster_path' => $movie->poster_path,
+                    'media_type' => $movie->media_type,
+                    'release_date' => $movie->release_date,
+                    'vote_average' => $movie->vote_average,
+                    'vote_count' => $movie->vote_count,
+                    'opening_crawl' => $movie->overview,
+                ];
+            });
+
             // Filter out existing movies by checking if the title already exists in the database
             $existingMovies = Movie::whereIn('title', $movies->pluck('title'))->get();
             $newMovies = $movies->reject(function ($movie) use ($existingMovies) {
                 return $existingMovies->pluck('title')->contains($movie['title']);
             });
 
+             // Filter out existing movies by checking if the title already exists in the database
+             $existingMovies2 = Movie::whereIn('title', $movies2->pluck('title'))->get();
+             $newMovies2 = $movies2->reject(function ($movie) use ($existingMovies2) {
+                 return $existingMovies2->pluck('title')->contains($movie['title']);
+             });
+
             // Store the new movies in the database
             if ($newMovies->isNotEmpty()) {
                 Movie::insert($newMovies->toArray());
+            }
+             // Store the new movies in the database
+             if ($newMovies2->isNotEmpty()) {
+                Movie::insert($newMovies2->toArray());
             }
             $movies = Movie::all();
             return $movies;
